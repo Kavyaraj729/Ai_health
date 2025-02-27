@@ -26,8 +26,8 @@ body {
 .container {
   display: flex;
   width: 90%;
-  max-width: 1400px;
-  min-height: 600px;
+  max-width: 1200px;
+  min-height: 500px;
   background: white;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
@@ -57,14 +57,14 @@ body {
 
 .form-box {
   width: 100%;
-  max-width: 450px;
-  padding: 20px;
+  max-width: 400px;
+  padding: 15px;
 }
 
 .portal-title {
   color: #000;
-  margin-bottom: 40px;
-  font-size: 32px;
+  margin-bottom: 20px;
+  font-size: 28px;
   text-align: center;
   font-weight: 600;
 }
@@ -145,60 +145,65 @@ body {
   color: white;
 }
 
-form {
+/* Add these new styles for role selector */
+.role-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
 }
 
-label {
-  text-align: left;
-  font-size: 16px;
-  color: #000;
-  font-weight: 500;
-  margin-bottom: -5px;
+.role-btn i {
+  font-size: 20px;
 }
 
-input {
-  width: 100%;
-  padding: 15px;
-  border: 2px solid #eee;
-  border-radius: 10px;
-  background: #f8f9fa;
-  font-size: 16px;
-  color: #000;
-  transition: all 0.3s ease;
-}
-
-input:focus {
+.role-btn.active {
   border-color: #007bff;
-  outline: none;
-  background: white;
+  background: #f0f7ff;
+  color: #007bff;
 }
 
-.login-btn {
-  width: 100%;
-  padding: 15px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: all 0.3s ease;
-}
-
-.login-btn:hover {
-  background: #0056b3;
+.role-btn:hover {
+  border-color: #007bff;
   transform: translateY(-2px);
 }
 
-.login-btn:active {
-  transform: translateY(0);
+/* Update input styles to be more compact */
+input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  background: #f8f9fa;
+  font-size: 14px;
+  color: #000;
+  transition: all 0.3s ease;
 }
 
+/* Update form gap */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Update right section padding */
 .right-section {
   width: 50%;
   display: flex;
@@ -206,7 +211,7 @@ input:focus {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 60px 40px;
+  padding: 40px 30px;
   background: #f8f9fa;
   position: relative;
   overflow: hidden;
@@ -235,8 +240,8 @@ input:focus {
 }
 
 .healthcare-image {
-  width: 80%;
-  height: 300px;
+  width: 70%;
+  height: 250px;
   background-image: url('https://img.freepik.com/free-vector/medical-healthcare-protection-shield-background_1017-24209.jpg');
   background-size: contain;
   background-repeat: no-repeat;
@@ -287,4 +292,24 @@ input:focus {
   input {
     padding: 12px;
   }
+}
+
+/* Add this to your existing CSS */
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.form-box form {
+  position: relative;
+}
+
+.login-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
