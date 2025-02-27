@@ -1,154 +1,59 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Home.css';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import "./home.css";
 
 const Home = () => {
-  const [activeForm, setActiveForm] = useState(null);
-  const [selectedRole, setSelectedRole] = useState(null);
-  const navigate = useNavigate();
-
-  const toggleForm = (formType) => {
-    setActiveForm(formType);
-    setSelectedRole(null);
-  };
-
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Here you would typically handle authentication
-    // For now, we'll just navigate to the respective dashboard
-    if (selectedRole === 'patient') {
-      navigate('/patient');
-    } else if (selectedRole === 'doctor') {
-      navigate('/doctor');
-    }
-  };
+  const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="home-container">
-      <div className="hero-section">
-        <motion.div 
-          className="hero-content"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1>Welcome to HealthCare Plus</h1>
-          <p>Your trusted partner in digital healthcare solutions</p>
-          <div className="cta-buttons">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleForm('login')}
-              className="primary-btn"
-            >
-              Login
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toggleForm('signup')}
-              className="secondary-btn"
-            >
-              Sign Up
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-
-      {activeForm && (
-        <motion.div 
-          className="modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={() => setActiveForm(null)}
-        >
-          <motion.div 
-            className="modal"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h2>{activeForm === 'login' ? 'Login' : 'Sign Up'}</h2>
-              <button className="close-btn" onClick={() => setActiveForm(null)}>×</button>
-            </div>
-            <div className="modal-content">
-              <div className="role-buttons">
-                <button 
-                  className={`role-btn patient-btn ${selectedRole === 'patient' ? 'selected' : ''}`}
-                  onClick={() => handleRoleSelect('patient')}
-                >
-                  <i className="fas fa-user"></i>
-                  Patient
-                </button>
-                <button 
-                  className={`role-btn doctor-btn ${selectedRole === 'doctor' ? 'selected' : ''}`}
-                  onClick={() => handleRoleSelect('doctor')}
-                >
-                  <i className="fas fa-user-md"></i>
-                  Doctor
-                </button>
+    <div className="main-container">
+      <div className="container">
+        <div className="left-section">
+          <div className="form-box">
+            <h2 className="portal-title">Healthcare Portal</h2>
+            
+            <div className="toggle-container">
+              <div className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  id="switch" 
+                  checked={!isLogin}
+                  onChange={() => setIsLogin(!isLogin)}
+                />
+                <label htmlFor="switch" className="toggle-label">
+                  <span className="toggle-text-left">Login</span>
+                  <span className="toggle-text-right">Register</span>
+                </label>
               </div>
-              {activeForm === 'login' ? (
-                <form className="auth-form" onSubmit={handleSubmit}>
-                  <input type="email" placeholder="Email" required />
-                  <input type="password" placeholder="Password" required />
-                  <button 
-                    type="submit" 
-                    className="submit-btn"
-                    disabled={!selectedRole}
-                  >
-                    Login
-                  </button>
-                </form>
-              ) : (
-                <form className="auth-form" onSubmit={handleSubmit}>
-                  <input type="text" placeholder="Full Name" required />
-                  <input type="email" placeholder="Email" required />
-                  <input type="password" placeholder="Password" required />
-                  <input type="password" placeholder="Confirm Password" required />
-                  <button 
-                    type="submit" 
-                    className="submit-btn"
-                    disabled={!selectedRole}
-                  >
-                    Sign Up
-                  </button>
-                </form>
-              )}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
 
-      <div className="features-section">
-        <motion.div 
-          className="features-grid"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <div className="feature-card">
-            <i className="fas fa-user-md"></i>
-            <h3>Expert Doctors</h3>
-            <p>Connect with qualified healthcare professionals</p>
+            <form>
+              {!isLogin && (
+                <>
+                  <label>Full Name</label>
+                  <input type="text" placeholder="Enter your full name" />
+                </>
+              )}
+              <label>Email</label>
+              <input type="email" placeholder="Enter your email" />
+              <label>Password</label>
+              <input type="password" placeholder="Enter password" />
+              {!isLogin && (
+                <>
+                  <label>Confirm Password</label>
+                  <input type="password" placeholder="Confirm your password" />
+                </>
+              )}
+              <button type="submit" className="login-btn">
+                {isLogin ? "Login" : "Register"}
+              </button>
+            </form>
           </div>
-          <div className="feature-card">
-            <i className="fas fa-calendar-check"></i>
-            <h3>Easy Scheduling</h3>
-            <p>Book appointments at your convenience</p>
-          </div>
-          <div className="feature-card">
-            <i className="fas fa-comments"></i>
-            <h3>24/7 Support</h3>
-            <p>Round-the-clock medical assistance</p>
-          </div>
-        </motion.div>
+        </div>
+        <div className="right-section">
+          <h1>Welcome to <span className="highlight">Healthcare Portal</span></h1>
+          <p>A secure platform for managing patient records and appointments</p>
+          <div className="healthcare-image"></div>
+        </div>
       </div>
     </div>
   );
