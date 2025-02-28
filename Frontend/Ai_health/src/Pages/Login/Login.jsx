@@ -1,22 +1,52 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import './Login.css';
 
-const Login = ({ userName = "shivam singh", role = "Doctor" }) => {
+const Login = () => {
+  const [userName, setUserName] = useState('');
+  const [role, setRole] = useState('Patient');
   const [activeTab, setActiveTab] = useState('overview');
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // State to manage dialog visibility
+  const [prescriptions, setPrescriptions] = useState([]); // State to store prescriptions
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserName(user.displayName || user.email.split('@')[0]);
+      } else {
+        setUserName('');
+      }
+    });
+
+    // Mock prescription data (replace with actual API call)
+    setPrescriptions([
+      { id: 1, name: 'Paracetamol', dosage: '500mg', frequency: 'Twice a day' },
+      { id: 2, name: 'Amoxicillin', dosage: '250mg', frequency: 'Once a day' },
+    ]);
+
+    return () => unsubscribe();
+  }, []);
+
+  const handlePrescriptionClick = () => {
+    setIsDialogOpen(true); // Open the dialog box
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false); // Close the dialog box
+  };
 
   return (
     <div className="dashboard-container">
-      {/* Header Section */}
       <header className="dashboard-header">
         <div className="header-content">
           <div className="welcome-section">
-            <h1>Welcome, {userName}</h1>
+            <h1>Welcome, {userName || 'User'}</h1>
             <p>Healthcare Platform Dashboard</p>
           </div>
         </div>
       </header>
 
-      {/* Dashboard Cards */}
       <div className="dashboard-cards">
         <div className="card">
           <div className="card-icon">
@@ -28,7 +58,7 @@ const Login = ({ userName = "shivam singh", role = "Doctor" }) => {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card" onClick={handlePrescriptionClick}>
           <div className="card-icon">
             <i className="fas fa-prescription"></i>
           </div>
@@ -59,15 +89,35 @@ const Login = ({ userName = "shivam singh", role = "Doctor" }) => {
         </div>
       </div>
 
-      {/* Tabs Section */}
+      {/* Dialog Box */}
+      {isDialogOpen && (
+        <div className="dialog-overlay">
+          <div className="dialog-box">
+            <h2>Prescriptions</h2>
+            {prescriptions.length > 0 ? (
+              <ul>
+                {prescriptions.map((prescription) => (
+                  <li key={prescription.id}>
+                    <strong>{prescription.name}</strong> - {prescription.dosage} ({prescription.frequency})
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No prescriptions added.</p>
+            )}
+            <button onClick={handleCloseDialog}>Close</button>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
           Overview
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'recent' ? 'active' : ''}`}
           onClick={() => setActiveTab('recent')}
         >
@@ -75,11 +125,10 @@ const Login = ({ userName = "shivam singh", role = "Doctor" }) => {
         </button>
       </div>
 
-      {/* Role Information Section */}
       <div className="role-info">
         <h2>Role-Specific Information</h2>
         <p>
-          {role === 'Doctor' 
+          {role === 'Doctor'
             ? 'View your patient appointments and manage medical records.'
             : 'View your medical history and upcoming appointments.'}
         </p>

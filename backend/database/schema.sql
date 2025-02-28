@@ -48,6 +48,14 @@ CREATE TABLE scan_annotations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (scan_id) REFERENCES medical_scans(id)
 );
+CREATE TABLE prescriptions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT NOT NULL,
+    patient_name VARCHAR(255) NOT NULL, -- Changed to store full names
+    prescription_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
 ALTER TABLE medical_scans 
 ADD COLUMN patient_id INT,

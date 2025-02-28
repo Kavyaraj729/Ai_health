@@ -1,100 +1,136 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { auth, db } from "./firebase"; // Import Firestore
+import { updateProfile } from "firebase/auth";
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore"; // Firestore functions
 import "./home.css";
 
 const Home = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState('patient');
+  const [role, setRole] = useState("patient");
+  const [otpVerified, setOtpVerified] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    otp: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [showOtpInput, setShowOtpInput] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields.");
       return false;
     }
     if (!isLogin) {
       if (!formData.fullName) {
-        setError('Please enter your full name');
+        setError("Please enter your full name.");
         return false;
       }
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
+        setError("Passwords do not match.");
         return false;
       }
+    }
+    if (!otpVerified) {
+      setError("Please verify your phone number with OTP.");
+      return false;
     }
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const sendOtp = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+
+    try {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+      });
+
+      const confirmation = await signInWithPhoneNumber(auth, formData.phone, window.recaptchaVerifier);
+      setConfirmationResult(confirmation);
+      setShowOtpInput(true);
+      alert("OTP sent to your phone!");
+    } catch (error) {
+      console.error("OTP Error:", error);
+      setError("Failed to send OTP. Check phone number.");
+    }
+  };
+
+  const verifyOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!confirmationResult) {
+      setError("Please request an OTP first.");
+      return;
+    }
+
+    try {
+      await confirmationResult.confirm(formData.otp);
+      setOtpVerified(true);
+      alert("OTP verified successfully!");
+    } catch (error) {
+      console.error("OTP Verification Error:", error);
+      setError("Invalid OTP. Please try again.");
+    }
+  };
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setError("");
 
     if (!validateForm()) return;
 
     try {
-      const endpoint = isLogin ? 'http://localhost:5000/api/login' : 'http://localhost:5000/api/register';
-      
-      console.log('Sending request to:', endpoint); // Debug log
-      console.log('Request data:', {
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        role: role
-      }); // Debug log
+      if (isLogin) {
+        // Login logic
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        alert("Login successful!");
+        navigate("/dashboard"); // Redirect to dashboard after login
+      } else {
+        // Registration logic
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'omit',
-        body: JSON.stringify({
+        // Save additional user data (role) in Firestore
+        const user = userCredential.user;
+        await setDoc(doc(db, "users", user.uid), {
           fullName: formData.fullName,
           email: formData.email,
-          password: formData.password,
-          role: role
-        }),
-      });
-
-      console.log('Response status:', response.status); // Debug log
-
-      const data = await response.json();
-      console.log('Response data:', data); // Debug log
-
-      if (response.ok) {
-        // Store token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Navigate to dashboard
-        navigate('/dashboard', { 
-          state: { 
-            userName: data.user.fullName,
-            role: data.user.role 
-          }
+          phone: formData.phone,
+          role: role, // Save the selected role
         });
-      } else {
-        setError(data.message || 'An error occurred');
+
+        alert("Registration successful!");
+        navigate("/dashboard"); // Redirect to dashboard after registration
       }
-    } catch (err) {
-      console.error('Detailed error:', err); // Debug log
-      setError('Network error. Please ensure the server is running and try again.');
+    } catch (error) {
+      console.error("Auth Error:", error);
+      setError(error.message);
     }
   };
 
@@ -104,22 +140,26 @@ const Home = () => {
         <div className="left-section">
           <div className="form-box">
             <h2 className="portal-title">Healthcare Portal</h2>
-            
+
             <div className="toggle-container">
               <div className="toggle-switch">
-                <input 
-                  type="checkbox" 
-                  id="switch" 
+                <input
+                  type="checkbox"
+                  id="switch"
                   checked={!isLogin}
                   onChange={() => {
                     setIsLogin(!isLogin);
-                    setError('');
+                    setError("");
                     setFormData({
-                      fullName: '',
-                      email: '',
-                      password: '',
-                      confirmPassword: ''
+                      fullName: "",
+                      email: "",
+                      password: "",
+                      confirmPassword: "",
+                      phone: "",
+                      otp: "",
                     });
+                    setOtpVerified(false);
+                    setShowOtpInput(false);
                   }}
                 />
                 <label htmlFor="switch" className="toggle-label">
@@ -129,74 +169,119 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="role-selector">
-              <button 
-                className={`role-btn ${role === 'patient' ? 'active' : ''}`}
-                onClick={() => setRole('patient')}
-              >
-                <i className="fas fa-user"></i>
-                Patient
-              </button>
-              <button 
-                className={`role-btn ${role === 'doctor' ? 'active' : ''}`}
-                onClick={() => setRole('doctor')}
-              >
-                <i className="fas fa-user-md"></i>
-                Doctor
-              </button>
-            </div>
+            {/* Conditionally render role selector only during registration */}
+            {!isLogin && (
+              <div className="role-selector">
+                <button
+                  className={`role-btn ${role === "patient" ? "active" : ""}`}
+                  onClick={() => setRole("patient")}
+                >
+                  <i className="fas fa-user"></i> Patient
+                </button>
+                <button
+                  className={`role-btn ${role === "doctor" ? "active" : ""}`}
+                  onClick={() => setRole("doctor")}
+                >
+                  <i className="fas fa-user-md"></i> Doctor
+                </button>
+              </div>
+            )}
 
             {error && <div className="error-message">{error}</div>}
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleAuth}>
               {!isLogin && (
                 <>
                   <label>Full Name</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name" 
+                    placeholder="Enter your full name"
+                    required
                   />
                 </>
               )}
+
               <label>Email</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="Enter your email" 
+                placeholder="Enter your email"
+                required
               />
+
               <label>Password</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                placeholder="Enter password" 
+                placeholder="Enter your password"
+                required
               />
+
               {!isLogin && (
                 <>
                   <label>Confirm Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="Confirm your password" 
+                    placeholder="Confirm your password"
+                    required
                   />
                 </>
               )}
-              <button type="submit" className="login-btn">
-                {isLogin ? `Login as ${role}` : `Register as ${role}`}
+
+              <button type="submit" className="login-btn" disabled={!otpVerified}>
+                {isLogin ? "Login" : "Register"}
               </button>
             </form>
+
+            <div className="otp-section">
+              {!showOtpInput ? (
+                <form onSubmit={sendOtp}>
+                  <label>Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter phone number"
+                    required
+                  />
+                  <button type="submit" className="login-btn">Send OTP</button>
+                </form>
+              ) : (
+                <form onSubmit={verifyOtp}>
+                  <label>Enter OTP</label>
+                  <input
+                    type="text"
+                    name="otp"
+                    value={formData.otp}
+                    onChange={handleInputChange}
+                    placeholder="Enter OTP"
+                    required
+                  />
+                  <button type="submit" className="login-btn">Verify OTP</button>
+                </form>
+              )}
+
+              {otpVerified && <p className="otp-success">✅ OTP Verified Successfully!</p>}
+            </div>
+
+            <div id="recaptcha-container"></div>
           </div>
         </div>
         <div className="right-section">
-          <h1>Welcome to <span className="highlight">Healthcare Portal</span></h1>
+          <h1>
+            Welcome to <span className="highlight">Healthcare Portal</span>
+          </h1>
           <p>A secure platform for managing patient records and appointments</p>
           <div className="healthcare-image"></div>
         </div>

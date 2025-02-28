@@ -12,6 +12,9 @@ mysql = MySQL()
 # JWT Configuration
 JWT_SECRET_KEY = 'your_jwt_secret_key'
 JWT_EXPIRATION_HOURS = 24
+def init_auth(app, mysql):
+    global db
+    db = mysql
 
 def init_auth(app):
     mysql.init_app(app)

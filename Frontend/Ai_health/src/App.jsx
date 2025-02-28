@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react';
 import Home from './Pages/Home/Home';
 import Login from './Pages/Login/Login';
+import Prescription from './Pages/Prescription/Prescription';
 import './App.css';
 
 function App() {
@@ -11,22 +12,29 @@ function App() {
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await fetch('http://localhost:5000/api/verify-token', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          if (response.ok) {
-            setIsAuthenticated(true);
-          } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/verify-token', {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        } catch (error) {
-          console.error('Token verification failed:', error);
+        });
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsAuthenticated(false);
         }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        setIsAuthenticated(false);
       }
       setLoading(false);
     };
@@ -35,18 +43,15 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading-container">Loading...</div>;
   }
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={!isAuthenticated ? <Home /> : <Navigate to="/dashboard" />} />
-        <Route 
-          path="/dashboard" 
-          element={isAuthenticated ? <Login /> : <Navigate to="/Login" />} 
-        />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/login" element={<Login />} /> 
+        <Route path='/prescription' element={<Prescription />} />
       </Routes>
     </Router>
   );
